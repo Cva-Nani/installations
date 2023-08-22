@@ -1,0 +1,123 @@
+sudo sysctl -w vm.max_map_count=262164      
+sudo sysctl -w fs.file-max=65536
+ulimit -n 65536
+ulimit -u 4096
+
+sudo nano /etc/security/limits.conf
+
+sonarqube   -   nofile   65536
+sonarqube   -   nproc    4096
+
+
+sudo apt-get update
+
+sudo apt-get install wget unzip -y
+
+sudo apt-get install openjdk-11-jdk -y
+
+sudo apt-get install openjdk-11-jre -y
+
+sudo update-alternatives --config java
+
+java -version
+
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list'
+
+
+wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O- | sudo apt-key add -
+
+sudo apt install postgresql postgresql-contrib -y
+
+sudo systemctl start postgresql
+
+sudo systemctl enable postgresql
+
+sudo passwd postgres
+
+su - postgres
+
+createuser sonar
+
+psql
+
+ALTER USER sonar WITH ENCRYPTED password 'sonar';
+
+CREATE DATABASE sonarqube OWNER sonar;
+
+grant all privileges on DATABASE sonarqube to sonar;
+
+// grant all privileges to sonar USER on sonarqube DATABASE
+
+\q
+
+exit
+
+cd /tmp
+
+sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-7.9.5.zip
+
+sudo unzip sonarqube-*.zip -d /opt
+
+sudo unzip sonarqube-7.9.5.zip -d /opt
+
+sudo mv /opt/sonarqube-7.9.5 /opt/sonarqube
+
+sudo groupadd sonar
+
+sudo useradd -c "user to run SonarQube" -d /opt/sonarqube -g sonar sonar 
+
+sudo chown -R sonar:sonar /opt/sonarqube
+
+sudo nano /opt/sonarqube/conf/sonar.properties
+
+sonar.jdbc.username=sonar
+sonar.jdbc.password=sonar
+sonar.jdbc.url=jdbc:postgresql://localhost:5432/sonarqube
+
+sudo nano /opt/sonarqube/bin/linux-x86-64/sonar.sh
+#RUN_AS_USER=sonar
+
+sudo su sonar
+
+cd /opt/sonarqube/bin/linux-x86-64/
+
+./sonar.sh start
+
+./sonar.sh status
+
+cd /opt/sonarqube/bin/linux-x86-64/
+
+./sonar.sh stop
+
+exit
+
+sudo nano /etc/systemd/system/sonar.service
+
+[Unit]
+Description=SonarQube service
+After=syslog.target network.target
+
+[Service]
+Type=forking
+
+ExecStart=/opt/sonarqube/bin/linux-x86-64/sonar.sh start
+ExecStop=/opt/sonarqube/bin/linux-x86-64/sonar.sh stop
+
+User=sonar
+Group=sonar
+Restart=always
+
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
+
+sudo systemctl start sonar
+
+ sudo systemctl enable sonar
+
+ sudo systemctl status sonar
+
+
+	public IP:9000
