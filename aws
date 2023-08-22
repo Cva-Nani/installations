@@ -1,0 +1,133 @@
+first install awscli
+sudo apt install awscli
+
+
+--Pre-requisites:
+
+an EC2 Instance:-
+---------------
+(AWS EKS Setup
+Setup kubectl
+a. Download kubectl version 1.20
+b. Grant execution permissions to kubectl executable
+c. Move kubectl onto /usr/local/bin
+d. Test that your kubectl installation was successful)
+
+sudo su -
+curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+mv ./kubectl /usr/local/bin 
+kubectl version --short --client
+
+Setup eksctl:-
+------------
+a. Download and extract the latest release
+b. Move the extracted binary to /usr/local/bin
+c. Test that your eksclt installation was successful
+
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+mv /tmp/eksctl /usr/local/bin
+eksctl version
+
+Create an IAM Role and attache it to EC2 instance:-
+--------------------------------------------------
+Note: create IAM user with programmatic access if your bootstrap system is outside of AWS
+IAM user should have access to
+IAM
+EC2
+VPC
+CloudFormation
+
+#Create your cluster and nodes:-
+-------------------------------
+eksctl create cluster --name shivudu-cluster  \
+--region region-name \
+--node-type instance-type \
+--nodes-min 2 \
+--nodes-max 2 \ 
+--zones <AZ-1>,<AZ-2>
+
+example:-
+---------
+eksctl create cluster --name ekss-cluster  \
+   --region us-east-1 \
+--node-type t2.small \
+
+eksctl create cluster --name demo-eks1 --region us-east-2 --nodegroup-name my-nodes --node-type t3.small --managed --nodes 2
+
+To delete the EKS clsuter:-
+-------------------------
+eksctl delete cluster shivudu-cluster --region us-east-1
+
+
+Validate your cluster using by creating by checking nodes and by creating a pod
+
+kubectl get nodes
+kubectl run pod tomcat --image=tomcat 
+
+pip3 install awscli
+aws configure
+eksctl create cluster --help
+mkdir eks
+cd eks
+vi eks-cluster.yaml
+ 
+ex: 
+
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: EKS-cluster
+  region: us-east-2
+
+nodeGroups:
+  - name: node
+    instanceType: t2.small
+    desiredCapacity: 2
+
+eksctl create cluster -f eks-cluster.yaml
+eksctl get cluster
+eksctl get nodegroup --cluster EKS-cluster(metadata name)
+eksctl delete cluster EKS-cluster
+
+
+
+
+
+
+
+
+
+
+      sudo hostnamectl set-hostname Jenkins
+      sudo apt update
+      sudo apt install default-jdk -y
+      sudo apt install maven -y
+      wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+      echo deb http://pkg.jenkins.io/debian-stable binary/ | sudo tee /etc/apt/sources.list.d/jenkins.list
+      sudo apt update
+      sudo apt install jenkins -y
+     jenkins --version
+     sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+     sudo apt-get install docker.io -y
+     docker -v
+     sudo usermod -aG docker jenkins
+     sudo usermod -aG docker $USER
+     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+     sudo apt install unzip
+     sudo unzip awscliv2.zip
+     sudo ./aws/install
+     aws --version
+     sudo chmod 777 /var/run/docker.sock
+     curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+     sudo mv /tmp/eksctl /usr/local/bin
+     eksctl version
+     sudo curl --silent --location -o /usr/local/bin/kubectl   https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.6/2022-03-09/bin/linux/amd64/kubectl
+     sudo chmod +x /usr/local/bin/kubectl
+     kubectl version --short --client
+     sudo su - jenkins
+     eksctl create cluster --name demo-eks1 --region us-east-2 --nodegroup-name my-nodes --node-type t3.small --managed --nodes 2
+     cat /home/ubuntu/.kube/config
+
+
