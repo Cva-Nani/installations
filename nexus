@@ -1,0 +1,55 @@
+Pre-requistes:
+Please create a new Ubuntu EC2 instance with small type in AWS cloud. You would need at least 2 GB RAM.
+
+Let us see how to configure Nexus 3 on Ubuntu 18.0.4.
+
+How to setup SonaType Nexus3 on Ubuntu:
+
+ sudo apt update && sudo apt install openjdk-8-jre-headless -y
+ chnage to the directory cd /opt
+ sudo wget https://download.sonatype.com/nexus/3/nexus-3.22.0-02-unix.tar.gz
+ sudo tar -xvf nexus-3.22.0-02-unix.tar.gz
+ sudo mv nexus-3.22.0-02 nexus
+ sudo adduser nexus
+ sudo chown -R nexus:nexus /opt/nexus
+ sudo chown -R nexus:nexus /opt/sonatype-work
+ sudo vi /opt/nexus/bin/nexus.rc
+
+ change run_as_user="nexus"
+
+ sudo vi /opt/nexus/bin/nexus.vmoptions
+
+ -->Add all the below changes the file 
+
+-Xms512M
+-Xmx512M
+-XX:MaxDirectMemorySize=512m
+
+ sudo vi /etc/systemd/system/nexus.service
+ 
+-->Copy  the below content
+
+[Unit]
+Description=nexus service
+After=network.target
+
+[Service]
+Type=forking
+LimitNOFILE=65536
+User=nexus
+Group=nexus
+ExecStart=/opt/nexus/bin/nexus start
+ExecStop=/opt/nexus/bin/nexus stop
+User=nexus
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
+
+ sudo systemctl enable nexus
+ sudo systemctl start nexus
+ sudo systemctl status nexus
+ sudo cat /opt/sonatype-work/nexus3/admin.password
+
+
+URL - http://public_dns_name:8081
