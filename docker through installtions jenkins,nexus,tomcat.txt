@@ -1,0 +1,37 @@
+docker run -d --name jenkins-ci -p 8080:8080 jenkins/jenkins:lts
+
+docker exec -i jenkins-ci cat /var/jenkins_home/secrets/initialAdminPassword
+
+
+
+sudo docker run -d --name nexus_repo -p 8081:8081 sonatype/nexus3
+
+sudo docker logs nexus_repo -f
+
+sudo docker exec -i nexus_repo cat /nexus-data/admin.password
+
+
+sudo docker search tomcat
+sudo docker pull tomee
+sudo docker exec -it container ID bash
+ cd conf
+apt update
+apt install nano
+nano tomcat-users.xml
+
+  <role rolename="admin-gui"/>
+  <role rolename="admin-script"/>
+  <role rolename="manager-gui"/>
+  <role rolename="manager-script"/>
+
+  <user username="admin" password="admin" roles="admin-gui,admin-script,manager-gui,manager-script"/>
+</tomcat-users>
+root@99004eb465cb:/usr/local/tomee/webapps/manager/META-INF 
+ nano context.xml
+
+<Context antiResourceLocking="false" privileged="true" >
+  <CookieProcessor className="org.apache.tomcat.util.http.Rfc6265CookieProcessor"
+                   sameSiteCookies="strict" />
+  <Valve className="org.apache.catalina.valves.RemoteAddrValve"
+         allow=".*" />
+  <Manager sessionAttributeValueClassNameFilter="java\.lang\.(?:Boolean|Integer|Long|Number|String)|org\.apache\.catalina\.filters\.CsrfPreventionFilter\$L></Context>
