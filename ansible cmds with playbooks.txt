@@ -1,0 +1,213 @@
+ubuntu:
+on master:
+--------- 
+      python install
+      sudo apt-get update
+      sudo apt  install ansible
+      ssh ubuntu@172.31.92.167
+      ssh-keygen
+      cd .ssh
+      ls
+      cat id_rsa.pub
+      ssh ubuntu@172.31.92.167(pub or pvt)
+      exit
+      sudo mkdir /etc/ansible
+      sudo vi /etc/ansible/hosts
+
+    ex: [webuser]
+        172.31.95.11 (public ip)  
+
+
+      mkdir ansibleplaybooks
+      cd ansibleplaybooks/
+      ansible all -m ping
+      vi nginx.yaml
+
+
+
+      ex yaml file:
+      -----------
+- hosts: webuser
+  become: yes
+  remote_user: ubuntu
+  become_method: sudo
+  tasks:
+
+    - name: update
+      apt: update_cache=yes
+
+    - name: install Nginx
+      apt: name=nginx state=latest
+
+      notify:
+        - restart nginx
+
+  handlers:
+    - name: restart nginx
+      service: name=nginx state=reloaded
+
+
+		
+
+      ansible-playbook nginx.yaml --syntax-check
+      ansible-playbook nginx.yaml --list-hosts
+      ansible-playbook nginx.yaml
+      vi nginx.yaml
+      ansible-playbook nginx.yaml
+      vi nginx.yaml
+      ansible-playbook nginx.yaml
+      ls
+      nano nginx.yaml
+
+
+
+on slave:
+--------
+      sudo apt-get update
+      sudo apt install ansible -y
+      cd .ssh
+      ls
+      vi authorized_keys
+      
+
+
+ec2-user:
+---------
+	
+	sudo amazon-linux-extras install ansible2
+	sudo yum install pip
+	sudo pip install ansible
+	ansible all -m ping ec2-user
+
+
+- hosts: webserver
+  sudo: yes
+  name: play1
+  tasks:
+   - name: install Nginx
+     apt: name=nginx state:latest
+- hosts: webserver
+  sudo: yes
+  name: play2
+  tasks:
+   - name: install Apache
+     apt: name=apache2 state:latest
+
+
+
+
+ex1: 
+
+- name: Ansible Playbook to Install and Setup Apache on Ubuntu
+  hosts: webusers
+  become: yes
+  remote_user: ubuntu
+  become_method: sudo
+  tasks:
+    - name: Install latest version of Apache
+      apt: name=apache2 update_cache=yes state=latest
+
+    - name: Enable site
+      command: a2ensite
+      notify: restart-apache
+
+  handlers:
+    - name: restart-apache
+      service:
+        name: apache2
+        state: restarted
+
+
+
+
+ex2: 
+---
+- name: Ansible Playbook to Install and Setup nginx on Ubuntu
+  hosts: webusers
+  become: yes
+  remote_user: ubuntu
+  become_method: sudo
+  tasks:
+  - name: apt-get update
+    apt:
+      update_cache: yes
+
+  - name: install nginx
+    apt:
+      name: nginx
+      state: latest
+  - name: copy nginx site.conf
+    template:
+      src: site.conf.j2
+    notify: restart nginx
+
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+
+
+ex3:
+
+---
+  - hosts: web
+    become: yes
+    remote_user: ubuntu
+    tasks:
+    - name: Updating packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+
+    - name: Installing Java
+      apt:
+        name: openjdk-11-jre-headless
+        state: present
+
+    - name: Downloading tomcat from tomcat website
+      get_url:
+        url: https://dlcdn.apache.org/tomcat/tomcat-10/v10.0.27/bin/apache-tomcat-10.0.27.tar.gz
+        dest: /usr/local
+
+    - name: Extracting the .tar file of tomcat
+      unarchive:
+        src: /usr/local/apache-tomcat-10.0.27.tar.gz
+        dest: /usr/local
+        remote_src: yes
+
+    - name: Starting tomcat service
+      shell: nohup /usr/local/apache-tomcat-10.0.27/bin/startup.sh
+
+
+
+ex4: 
+
+---
+- hosts: web
+  tasks:
+    - name: Update APT package manager repositories cache
+      become: true
+      apt:
+        update_cache: yes
+    - name: Install Java using Ansible
+      become: yes
+      apt:
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+           - openjdk-11-jdk
+    - name: ensure the is jenkins installed
+      apt_key: url=https://pkg.jenkins.io/debian-stable/jenkins.io.key state=present
+      become: yes
+
+    - name: ensure the repository is configured
+      apt_repository: repo='deb https://pkg.jenkins.io/debian-stable binary/' state=present
+      become: yes
+
+    - name: ensure jenkins is installed
+      apt: name=jenkins update_cache=yes
+      become: yes
+
+    - name: ensure jenkins is running
+      service: name=jenkins state=started

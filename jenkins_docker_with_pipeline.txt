@@ -1,0 +1,94 @@
+For Jenkins Installation
+==========================
+
+sudo apt update
+sudo apt install default-jdk -y
+wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key |sudo gpg --dearmor -o /usr/share/keyrings/jenkins.gpg
+sudo sh -c 'echo deb [signed-by=/usr/share/keyrings/jenkins.gpg] http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+sudo apt update
+sudo apt install jenkins -y
+sudo systemctl start jenkins.service
+sudo systemctl status jenkins
+sudo ufw allow 8080
+sudo ufw allow OpenSSH
+sudo ufw enable
+sudo ufw status
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+==================================================================
+
+install docker 
+------------------
+
+sudo apt install docker.io -y
+sudo snap install docker
+
+===================================================================
+
+sudo usermod -aG docker jenkins
+sudo service jenkins restart
+sudo service docker restart
+=============================================================================================
+
+enable plugin docker pipeline => manage Jenkins->manage plugins->search in available->install
+manage jenkins->global tool configuration-> add maven
+
+give docker credentials in global credentials => manage Jenkins-> Manage credentials->Click on System->Click on Global credentials-> click on add credentials
+
+create credentials with kind is usernamewithpassword
+
+Note: Id in the while creating credentials and registryCredential in the pipeline must be same
+
+
+========================================================
+
+pipeline
+=================
+
+pipeline {
+    environment {
+        registry = "pbv832/inspired"
+        registryCredential = 'dockerhub_cred'
+        dockerImage = ''
+        mvnHome = tool name: 'm3', type: 'maven'
+        mvn = "${mvnHome}/bin/mvn"
+    }    
+    agent any
+  
+    stages {
+        stage('Cloning Git') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Cvaaaa/java-world.git'
+            }
+        }
+        stage('Build'){
+            steps{
+                sh "${mvn} clean package"
+            }
+        }
+        stage('Building image') {
+            steps{
+                script {
+                    dockerImage = docker.build registry + ":$BUILD_NUMBER"
+                }
+            }
+        }
+        stage('Deploy Image') {
+            steps{
+                script {
+                    docker.withRegistry( '', registryCredential ) {
+                    dockerImage.push()
+                    }    
+                }
+            }
+        }
+        stage('Remove Unused docker image') {
+            steps{
+                sh "docker rmi $registry:$BUILD_NUMBER"
+                sh "docker run -d --name Inspiredit9 -p 8085:8080 cva/inspired:$BUILD_NUMBER"
+                
+            }
+        }     
+    }
+}
+

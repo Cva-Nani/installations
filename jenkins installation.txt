@@ -1,0 +1,48 @@
+based on ubuntu22.04:
+-------------------
+
+	sudo apt update
+	sudo apt install default-jdk
+	wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key |sudo gpg --dearmor -o /usr/share/keyrings/jenkins.gpg
+
+	sudo sh -c 'echo deb [signed-by=/usr/share/keyrings/jenkins.gpg] http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+
+sudo apt update
+sudo apt install jenkins
+sudo systemctl start jenkins.service
+sudo systemctl status jenkins
+  
+   open expose port 8080
+  http://your_server_ip_or_domain:8080
+  sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+
+
+
+docker run -d --name jenkins-ci -p 8080:8080 jenkins/jenkins:lts
+
+docker exec -i jenkins-ci cat /var/jenkins_home/secrets/initialAdminPassword
+
+sudo docker container exec -i jenkins-ci cat /var/jenkins_home/secrets/initialAdminPassword
+
+
+
+how to change port using commands:-
+---------------------------------
+
+
+sudo sed -i -e 's/Environment="JENKINS_PORT=[0-9]\+"/Environment="JENKINS_PORT=8081"/' /usr/lib/systemd/system/jenkins.service
+
+sudo sed -i -e 's/^\s*#\s*AmbientCapabilities=CAP_NET_BIND_SERVICE/AmbientCapabilities=CAP_NET_BIND_SERVICE/' /usr/lib/systemd/system/jenkins.service
+
+sudo systemctl daemon-reload
+
+sudo systemctl restart jenkins
+
+sudo lsof -i -n -P | grep jenkins
+
+
+
+
+
+

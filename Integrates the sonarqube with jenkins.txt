@@ -1,0 +1,66 @@
+Integrates the sonarqube with jenkins
+------------------------------------------
+
+On Sonarqube server
+    Generate a sonarqube token to authenticate from Jenkins
+On Jenkins server
+    Install Sonarqube plugin
+    Configure Sonarqube credentials
+    Add Sonarqube to jenkins "configure system"
+    Install SonarScanner "Global Tool Configuration"
+    Run Pipeline job
+
+====================================================================
+
+pipeline{
+    agent any
+    tools {
+        maven "maven3"
+    }
+    stages{
+       stage('GetCode'){
+            steps{
+                git branch: 'master', url: 'https://github.com/Cvaaaa/amazon-eks-jenkins-terraform.git';
+            }
+         }        
+       stage('Build'){
+            steps{
+                sh 'mvn clean package'
+            }
+         }
+        stage('SonarQube analysis') {
+    
+            steps{
+                withSonarQubeEnv('sonarqube-7.9.5') { 
+                    sh "mvn sonar:sonar"
+                }
+            }
+        }
+       
+    }
+}
+
+
+
+
+
+
+node{
+    stage('git clone') {
+        git credentialsId: 'git', url: 'https://github.com/Cvaaaa/maven-web-app.git'
+    }
+    
+    stage('build') {
+        def mavenHome = tool name: "Maven3", type: "maven"
+        def mavenCMD = "${mavenHome}/bin/mvn"
+        sh "${mavenCMD} clean package"
+    }
+    
+    stage('code quality check'){
+            withSonarQubeEnv('sonarqube-7.9.5') { 
+            def mavenHome = tool name: "Maven3", type: "maven"
+            def mavenCMD = "${mavenHome}/bin/mvn"
+            sh "${mavenCMD} sonar:sonar"
+        }
+    }
+}
