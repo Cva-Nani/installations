@@ -1,44 +1,90 @@
 pipeline {
-  environment {
-    registry = "vinod9782/inspired"
-    registryCredential = 'dockerhub'
-    dockerImage = ''
-  }    
-  agent any
-  tools {maven "maven" }
-  stages {
-    stage('Cloning Git') {
-      steps {
-        git 'https://github.com/hrmanth/game-of-life.git'
-      }
+    agent any
+    tools {
+        maven 'maven'
     }
-        stage('Build'){
-            steps{
-                 sh script: 'mvn clean package'
-         }
-       }
-    stage('Building image') {
-      steps{
-        script {
-          dockerImage = docker.build registry + ":$BUILD_NUMBER"
-        }
-      }
+    environment {
+        registry = "cvaa/petclinic7"
+        registryCredential = "DOCK_CRED"
+        dockerImage = ''
     }
-    stage('Deploy Image') {
-      steps{
-         script {
-            docker.withRegistry( '', registryCredential ) {
-            dockerImage.push()
-            }    
-          }
+
+    stages {
+        stage('git clone') {
+            steps {
+                checkout scmGit(branches: [[name: '*/main']],
+                extensions: [], userRemoteConfigs: [[credentialsId: 'GIT_CRED',
+                url: 'https://github.com/Cvaaaa/spring-petclinic-docker.git']])
+            }
         }
-      }
-    stage('Remove Unused docker image') {
-      steps{
-        sh "docker rmi $registry:$BUILD_NUMBER"
-        sh "docker run -d --name Inspiredit9 -p 8088:8080 vinod9782/inspired:$BUILD_NUMBER"
+        stage('UNIT Testing') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+        stage ('Maven Build') {
+            steps {
+                sh 'mvn clean install'
+            }
+        }
+        stage('code quality check') {
+            steps {
+                script {
+                    withSonarQubeEnv(credentialsId: 'SONAR_CRED') {
+                        sh "mvn clean package sonar:sonar"
+                    }
+                }
+            }
+        }
+        stage('upload to nexus') {
+            steps {
+                script {
+                nexusArtifactUploader artifacts: [[artifactId: 'spring-petclinic',
+                classifier: '',
+                file: 'target/spring-petclinic-2.7.0-SNAPSHOT.jar',
+                type: 'jar']],
+                credentialsId: 'NEXUS_CRED',
+                groupId: 'org.springframework.samples',
+                nexusUrl: '54.173.245.9:8081',
+                nexusVersion: 'nexus3',
+                protocol: 'http',
+                repository: 'bb_bb',
+                version: '2.7.0-SNAPSHOT'
+                }
+            }
+        }
+        stage('Build app') {
+            steps {
+                script{
+                    dockerImage = docker.build registry + ":$BUILD_NUMBER"
+                }
+            }
+        }
         
-      }
-    }     
-      }
-   }
+        stage('Deploy Image') {
+            steps{
+                script {
+                    docker.withRegistry( '', registryCredential ) {
+                        dockerImage.push()
+                    }
+                }
+            }
+        }
+        
+        stage('Remove Unused docker image') {
+            steps{
+                sh "docker rmi $registry:$BUILD_NUMBER"
+                sh "docker run -d --name petclinic13 -p 8082:8080 $registry:$BUILD_NUMBER"
+            }
+        }
+        stage('Deploy to EKS') {
+            steps {
+                script {
+                    withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'K8s-CRED', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
+                        sh "kubectl apply -f eks-deploy-k8s.yaml"
+                    }
+                }
+            }
+        }
+    }
+}
