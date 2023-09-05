@@ -1,9 +1,16 @@
+sudo apt update or sudo yum update
+sudo apt install docker.io -y
+
+Docker Through jenkins:-
+----------------------
+docker search jenkins
 docker run -d --name jenkins-ci -p 8080:8080 jenkins/jenkins:lts
 
 docker exec -i jenkins-ci cat /var/jenkins_home/secrets/initialAdminPassword
 
 
-
+Docker Through nexus3:-
+--------------------
 sudo docker run -d --name nexus_repo -p 8081:8081 sonatype/nexus3
 
 sudo docker logs nexus_repo -f
@@ -11,6 +18,12 @@ sudo docker logs nexus_repo -f
 sudo docker exec -i nexus_repo cat /nexus-data/admin.password
 
 
+Docker Through sonarqube:-
+------------------------
+sudo docker run -d --name sonar -p 9000:9000 sonarqube:lts
+
+Docker Through Tomcat:-
+----------------------
 sudo docker search tomcat
 sudo docker pull tomee
 sudo docker exec -it container ID bash
