@@ -47,7 +47,7 @@ pipeline
 
 pipeline {
     environment {
-        registry = "pbv832/inspired"
+        registry = "cvaa/inspired"
         registryCredential = 'dockerhub_cred'
         dockerImage = ''
         mvnHome = tool name: 'm3', type: 'maven'
@@ -85,7 +85,7 @@ pipeline {
         stage('Remove Unused docker image') {
             steps{
                 sh "docker rmi $registry:$BUILD_NUMBER"
-                sh "docker run -d --name Inspiredit9 -p 8085:8080 cva/inspired:$BUILD_NUMBER"
+                sh "docker run -d --name spring -p 8085:8080 cvaa/inspired:$BUILD_NUMBER"
                 
             }
         }     
